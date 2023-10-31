@@ -98,11 +98,7 @@ public class DashBoardServiceImpl implements DashBoardService {
                 .orElseThrow(() -> new DuplicateEntryException("Group id not found"));
 
     }
-//create symbol database
-    public Symbol createSymbol(Symbol symbol) {
-        // You can set any other properties you need for the symbol
-        return symbolsRepository.save(symbol);
-    }
+
 
 
 
