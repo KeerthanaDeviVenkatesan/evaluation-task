@@ -38,13 +38,7 @@ public class DashBoardController {
         return ResponseEntity.ok(watchlistGroups).getBody();
     }
 
-    @PostMapping("/createSymbol")
-    public ResponseEntity<Symbol> createSymbol(@RequestBody Symbol symbol) {
-        logger.info("Creating a new symbol: {}", symbol);
-        Symbol createdSymbol = dashBoardService.createSymbol(symbol);
-        logger.info("Created symbol: {}", createdSymbol);
-        return new ResponseEntity<>(createdSymbol, HttpStatus.CREATED);
-    }
+
 
     @PostMapping("/addSymbols")
     public ResponseEntity<String> addSymbol(@RequestBody TradeRequest tradeRequest) throws ArgumentConstraintViolation {
