@@ -71,7 +71,7 @@ public class DashBoardController {
     }
 
     @GetMapping("/port")
-    public List<PortfolioDTO> getPortfolio(@RequestBody TradeRequest tradeRequest) {
+    public List<PortfolioDTO> getPortfolio() {
         logger.info("Getting portfolio information");
         List<PortfolioDTO> portfolio = dashBoardService.getPortfolio();
         logger.info("Retrieved portfolio information");
@@ -79,7 +79,7 @@ public class DashBoardController {
     }
 
     @GetMapping("/tradeHistory")
-    public List<TradeHistoryDTO> getTradeHistory(@RequestBody TradeRequest tradeRequest) {
+    public List<TradeHistoryDTO> getTradeHistory() {
         logger.info("Getting trade history");
         List<TradeHistoryDTO> tradeHistory = dashBoardService.getTradeHistory();
         logger.info("Retrieved trade history");
