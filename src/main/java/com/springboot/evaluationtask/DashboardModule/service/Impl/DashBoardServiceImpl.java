@@ -1,6 +1,5 @@
 package com.springboot.evaluationtask.DashboardModule.service.Impl;
 
-
 import com.springboot.evaluationtask.DashboardModule.Dto.*;
 import com.springboot.evaluationtask.DashboardModule.enity.Order;
 import com.springboot.evaluationtask.DashboardModule.enity.Symbol;
@@ -22,9 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
+
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,13 +33,13 @@ public class DashBoardServiceImpl implements DashBoardService {
     UserRepository userRepository;
     @Autowired
     SymbolRepository symbolsRepository;
-    @Autowired
-    WatchListGroupRepository watchListRepository;
+
     @Autowired
     OrderRepository orderRepository;
     @Autowired
     TradeRepository tradeRepository;
 
+    //getCurrentUser from the database
 
     public User getCurrentUser() {
         String userName = JWTFilter.userNameMatches;
@@ -49,14 +47,14 @@ public class DashBoardServiceImpl implements DashBoardService {
         return existingUser.orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
-//get watchlist for respective users
+//get watchlistGroup for respective users
     public List<WatchlistGroupDTO> getWatchlistGroups() {
         User userInfo = getCurrentUser();
-        return convertToWatchlistGroupDTOs(userInfo.getWatchlists());
+        return convertWatchlistGroupDTOs(userInfo.getWatchlists());
     }
 
 
-    //addWatchlist to respective Users
+    //addWatchlistGroup to respective Users
     @Override
     public String addWatchlistGroup(TradeRequest tradeRequest) {
         String groupName = tradeRequest.getGroupName();
@@ -75,13 +73,13 @@ public class DashBoardServiceImpl implements DashBoardService {
         return "watchlist group"+id;
     }
 
-    //WatchlistGroups to WatchlistGroupDTOs
-    private List<WatchlistGroupDTO> convertToWatchlistGroupDTOs(List<WatchListGroup> watchlists) {
+    //WatchlistGroup to WatchlistGroupDTO
+    private List<WatchlistGroupDTO> convertWatchlistGroupDTOs(List<WatchListGroup> watchlists) {
         return watchlists.stream()
-                .map(this::convertToWatchlistGroupDTO)
+                .map(this::convertWatchlistGroupDTO)
                 .collect(Collectors.toList());
     }
-    private WatchlistGroupDTO convertToWatchlistGroupDTO(WatchListGroup group) {
+    private WatchlistGroupDTO convertWatchlistGroupDTO(WatchListGroup group) {
         WatchlistGroupDTO groupDTO = new WatchlistGroupDTO();
         groupDTO.setId(group.getId());
         groupDTO.setGroupName(group.getGroupName());
@@ -90,19 +88,12 @@ public class DashBoardServiceImpl implements DashBoardService {
 
         return groupDTO;
     }
-    //method to check whether a watchlist group is present or not and return it
-    private WatchListGroup checkWatchlistGroupExists(User userInfo, Long groupId) {
-        return userInfo.getWatchlists().stream()
-                .filter(group -> Objects.equals(group.getId(), groupId))
-                .findFirst()
-                .orElseThrow(() -> new DuplicateEntryException("Group id not found"));
-
-    }
 
 
 
 
-    //add symbols to group
+
+    //add symbols to WatchListGroup
     @Override
 public UserDTO addSymbolToWatchlistGroups(TradeRequest tradeRequest) throws ArgumentConstraintViolation {
     AddSymbol addSymbol = tradeRequest.getSymbol();
@@ -111,7 +102,7 @@ public UserDTO addSymbolToWatchlistGroups(TradeRequest tradeRequest) throws Argu
 
     if (groupId != null) {
         User userInfo = getCurrentUser();
-        WatchListGroup watchlist = checkWatchlistGroupExists(userInfo, groupId);
+        WatchListGroup watchlist = checkWatchlistGroup(userInfo, groupId);
         List<String> symbols = watchlist.getSymbols();
 
         if (symbolsRepository.existsBySymbol(symbol)) {
@@ -127,16 +118,24 @@ public UserDTO addSymbolToWatchlistGroups(TradeRequest tradeRequest) throws Argu
         throw new ArgumentConstraintViolation("groupId cannot be null");
     }
 }
-//get symbols from the watchlist
+//get symbols from the watchlistGroup
     @Override
 public List<String> getSymbolsFromWatchlistGroups(TradeRequest tradeRequest) {
     User userInfo = getCurrentUser();
     Long groupId = tradeRequest.getGroupId();
-    WatchListGroup watchlist = checkWatchlistGroupExists(userInfo, groupId);
+    WatchListGroup watchlist = checkWatchlistGroup(userInfo, groupId);
     List<String> symbols = watchlist.getSymbols();
 
     return symbols != null ? symbols : Collections.emptyList();
 }
+    //watchlist group is present or not and return it
+    private WatchListGroup checkWatchlistGroup(User userInfo, Long groupId) {
+        return userInfo.getWatchlists().stream()
+                .filter(group -> Objects.equals(group.getId(), groupId))
+                .findFirst()
+                .orElseThrow(() -> new DuplicateEntryException("Group id not found"));
+
+    }
     //add order respective symbol
     @Override
     public String addOrder(TradeRequest tradeRequest) {
@@ -178,13 +177,12 @@ public List<String> getSymbolsFromWatchlistGroups(TradeRequest tradeRequest) {
         List<Order> buyOrders = orderRepository.findByStatus("PENDING");
         List<Order> sellOrders = orderRepository.findByStatus("PENDING");
 
-        // Match buy and sell orders based on prices
         List<Trade> executedTrades = matchOrders(buyOrders, sellOrders);
 
-        // Save trade history to the database
+        // save trade history
         tradeRepository.saveAll(executedTrades);
 
-        // Update the status of buy and sell orders to "EXECUTED"
+        // update the status
         updateOrderStatus(buyOrders);
         updateOrderStatus(sellOrders);
     }
@@ -195,7 +193,7 @@ public List<String> getSymbolsFromWatchlistGroups(TradeRequest tradeRequest) {
         for (Order buyOrder : buyOrders) {
             for (Order sellOrder : sellOrders) {
                 if (buyOrder.getPrice() >= sellOrder.getPrice()) {
-                    // Calculate the quantity to be exchanged
+
                     int quantityToExchange = Math.min(buyOrder.getQuantity(), sellOrder.getQuantity());
 
                     // Update buy and sell orders
@@ -309,7 +307,7 @@ public List<String> getSymbolsFromWatchlistGroups(TradeRequest tradeRequest) {
         UserDTO userDTO = new UserDTO();
         userDTO.setUserId(user.getUserId());
         userDTO.setUsername(user.getUsername());
-        userDTO.setWatchListGroupDto(convertToWatchlistGroupDTOs(user.getWatchlists()));
+        userDTO.setWatchListGroupDto(convertWatchlistGroupDTOs(user.getWatchlists()));
         return userDTO;
     }
 
