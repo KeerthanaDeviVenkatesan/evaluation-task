@@ -1,14 +1,12 @@
 package com.springboot.evaluationtask.DashboardModule.controller;
 
 import com.springboot.evaluationtask.DashboardModule.Dto.*;
-import com.springboot.evaluationtask.DashboardModule.enity.Symbol;
 import com.springboot.evaluationtask.DashboardModule.exception.ArgumentConstraintViolation;
 import com.springboot.evaluationtask.DashboardModule.service.Impl.DashBoardServiceImpl;
 import com.springboot.evaluationtask.dto.UserDTO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,7 +51,7 @@ public class DashBoardController {
         logger.info("Getting symbols for trade request: {}", tradeRequest);
         List<String> symbols = dashBoardService.getSymbolsFromWatchlistGroups(tradeRequest);
         logger.info("Retrieved symbols: {}", symbols);
-        return ResponseEntity.ok("symbols" + symbols);
+        return ResponseEntity.ok("symbols  :" + symbols);
     }
 
     @PostMapping("/addOrder")
@@ -73,7 +71,7 @@ public class DashBoardController {
     }
 
     @GetMapping("/port")
-    public List<PortfolioDTO> getPortfolio() {
+    public List<PortfolioDTO> getPortfolio(@RequestBody TradeRequest tradeRequest) {
         logger.info("Getting portfolio information");
         List<PortfolioDTO> portfolio = dashBoardService.getPortfolio();
         logger.info("Retrieved portfolio information");
@@ -81,7 +79,7 @@ public class DashBoardController {
     }
 
     @GetMapping("/tradeHistory")
-    public List<TradeHistoryDTO> getTradeHistory() {
+    public List<TradeHistoryDTO> getTradeHistory(@RequestBody TradeRequest tradeRequest) {
         logger.info("Getting trade history");
         List<TradeHistoryDTO> tradeHistory = dashBoardService.getTradeHistory();
         logger.info("Retrieved trade history");
